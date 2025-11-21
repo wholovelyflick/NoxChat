@@ -1,1 +1,21 @@
-
+{
+  "users": {
+    "1051288232": {
+      "tg_id": 1051288232,
+      "username": null,
+      "phone_number": null,
+      "registered_at": "2025-11-21 18:48:56",
+      "in_search": false,
+      "partner_tg_id": null,
+      "blocked": false,
+      "is_admin": false,
+      "gender": null,
+      "seeking_gender": null,
+      "age": null,
+      "interests": null
+    }
+  },
+  "dialogs": {},
+  "reports": {},
+  "reactions": {}
+}
