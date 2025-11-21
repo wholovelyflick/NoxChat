@@ -1,172 +1,80 @@
 from aiogram import Router, F, Bot
-
 from aiogram.filters import Command
-
 from aiogram.types import Message
-
 from database import Database
-
 from keyboards import build_main_keyboard, build_reactions_keyboard
-
 from config import ADMIN_IDS, DEVELOPER_ID
 
-
-
 router = Router()
-
 db = Database()
 
-
-
 async def is_admin(user_id: int) -> bool:
-
     if user_id == DEVELOPER_ID or user_id in ADMIN_IDS:
-
         return True
-
     user_info = await db.get_user(user_id)
-
     return user_info and user_info.get('is_admin')
 
-
-
 async def end_dialog_and_notify(bot: Bot, you_id: int) -> int:
-
     partner = await db.end_dialog_for(you_id)
-
     if partner is not None:
-
         try:
-
             is_admin_user = await is_admin(partner)
-
             await bot.send_message(partner, "💔 Собеседник завершил диалог", reply_markup=build_main_keyboard(is_admin_user))
-
             
-
             # Отправляем кнопки оценки после завершения диалога
-
             await bot.send_message(
-
                 partner,
-
                 "💭 Если хотите, оставьте мнение о вашем собеседнике. Это поможет находить вам подходящих собеседников:",
-
                 reply_markup=build_reactions_keyboard()
-
             )
-
         except Exception:
-
             pass
-
     return partner
 
-
-
 @router.message(F.text == "🔎 Поиск")
-
 @router.message(Command("search"))
-
 async def handle_search(message: Message, bot: Bot):
-
     user = message.from_user
-
     if user is None:
-
         return
-
     
-
     await db.ensure_user(user.id, user.username)
-
     
-
     if await db.is_blocked(user.id):
-
         is_admin_user = await is_admin(user.id)
-
         await message.answer("🚫 Ваш аккаунт заблокирован администратором", reply_markup=build_main_keyboard(is_admin_user))
-
         return
-
     
-
-    profile = await db.get_profile(user.id)
-
-    if not profile.get('phone_number'):
-
-        is_admin_user = await is_admin(user.id)
-
-        await message.answer("❌ Сначала укажите номер телефона в настройках!", reply_markup=build_main_keyboard(is_admin_user))
-
-        return
-
-    
-
+    # Убираем проверку номера телефона
     await db.set_in_search(user.id, True)
-
     partner_id = await db.find_match(user.id)
-
     
-
     if partner_id is None:
-
         is_admin_user = await is_admin(user.id)
-
         await message.answer("🔍 Ищу собеседника... Ожидайте ⏳", reply_markup=build_main_keyboard(is_admin_user))
-
         return
-
     
-
     is_admin_user = await is_admin(user.id)
-
     await message.answer("✅ Собеседник найден!\n\n💬 Можете начинать общение!", reply_markup=build_main_keyboard(is_admin_user))
-
     
-
     try:
-
         partner_admin_status = await is_admin(partner_id)
-
         await bot.send_message(partner_id, "✅ Собеседник найден!\n\n💬 Можете начинать общение!", reply_markup=build_main_keyboard(partner_admin_status))
-
     except Exception:
-
         pass
 
 
-
 @router.message(F.text == "🛑 Стоп")
-
 @router.message(Command("stop"))
-
 async def handle_stop(message: Message, bot: Bot):
-
     user = message.from_user
-
     if user is None:
-
         return
-
-    
-
     partner_id = await end_dialog_and_notify(bot, user.id)
-
     await db.set_in_search(user.id, False)
-
-    
-
     is_admin_user = await is_admin(user.id)
-
     if partner_id:
-
         await message.answer("💔 Диалог завершён\n\nНажмите «🔎 Поиск» чтобы найти нового собеседника", reply_markup=build_main_keyboard(is_admin_user))
-
-        
-
-        # Отправляем кнопки оценки после завершения диалога
 
         await message.answer(
 

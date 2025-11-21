@@ -23,7 +23,6 @@ def build_main_keyboard(is_admin: bool = False) -> ReplyKeyboardMarkup:
 def build_profile_settings_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📱 Номер телефона")],
             [KeyboardButton(text="📄 Мой профиль"), KeyboardButton(text="🔙 В главное меню")],
         ],
         resize_keyboard=True,
@@ -49,13 +48,4 @@ def build_reactions_keyboard() -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(inline_keyboard=[buttons])
 
-def build_phone_keyboard() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="📱 Поделиться номером", request_contact=True)],
-            [KeyboardButton(text="❌ Не указывать")],
-            [KeyboardButton(text="🔙 Назад в настройки")]
-        ],
-        resize_keyboard=True,
-        one_time_keyboard=True,
-    )
+# Убираем функцию build_phone_keyboard полностью
